@@ -465,13 +465,13 @@ public class SwitchBufferDialog extends JDialog
 		
 		if(textToMatch == null || textToMatch.trim().length() == 0)
 		{
-			bufferList.setListData(jEdit.getBuffers());
+			bufferList.setListData(SwitchBufferPlugin.getBuffersByRecentOrder());
 			if(bufferList.getModel().getSize() > 0){
 				bufferList.setSelectedIndex(getIndex(oldIndex));
 			}
 		}
 		
-		Buffer buffers[] = jEdit.getBuffers();
+		Buffer buffers[] = SwitchBufferPlugin.getBuffersByRecentOrder();
 		Vector vector = new Vector(buffers.length);
 		boolean flag = jEdit.getBooleanProperty("switchbuffer.options.ignore-case");
 		String matching = null;

@@ -31,7 +31,7 @@
 	<property file="${user.home}/build.properties"/>
 
 	<!-- these values can be overridden by the above files -->
-	<property name="plugin.name" value="SwitchBuffer"/>
+	<property name="plugin.name" value="SwitchBufferRecentOrder"/>
 	<property name="jar.name" value="${plugin.name}.jar"/>
 	<property name="src.dir" value="."/>
 	<property name="build.dir" value="build"/>

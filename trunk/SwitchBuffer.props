@@ -20,7 +20,7 @@
 # }}}
 
 #{{{ plugin properties
-plugin.switchbuffer.SwitchBufferPlugin.activate=defer
+plugin.switchbuffer.SwitchBufferPlugin.activate=startup
 
 plugin.switchbuffer.SwitchBufferPlugin.name=SwitchBuffer
 plugin.switchbuffer.SwitchBufferPlugin.author=Lee Turner, Tarun Ramakrishna Elankath
