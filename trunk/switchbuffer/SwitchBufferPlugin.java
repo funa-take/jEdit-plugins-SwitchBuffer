@@ -31,6 +31,7 @@ import javax.swing.JDialog;
 import org.gjt.sp.jedit.Buffer;
 import org.gjt.sp.jedit.EBMessage;
 import org.gjt.sp.jedit.EBPlugin;
+import org.gjt.sp.jedit.EditPane;
 import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
@@ -55,7 +56,8 @@ public class SwitchBufferPlugin extends EBPlugin
 	private static Map dialogsMap = new HashMap();
 	//}}}
 	
-	private static LinkedHashSet recentBuffers = new LinkedHashSet();
+	// private static LinkedHashSet recentBuffers = new LinkedHashSet();
+	private static HashMap<EditPane,LinkedHashSet> editPaneMap = new HashMap<EditPane,LinkedHashSet>();
 	
 	//{{{ instance fields
 	private String currentFile = "";
@@ -68,13 +70,18 @@ public class SwitchBufferPlugin extends EBPlugin
 	public SwitchBufferPlugin() { }//}}}
 	
 	static Buffer[] getBuffersByRecentOrder(){
+		if (!jEdit.getBooleanProperty("switchbuffer.options.recent-order",false)){
+			return jEdit.getActiveView().getEditPane().getBufferSet().getAllBuffers();
+		}
+		
 		LinkedHashSet buffers = new LinkedHashSet();
 		// Buffer[] array = jEdit.getBuffers();
 		Buffer[] array = jEdit.getActiveView().getEditPane().getBufferSet().getAllBuffers();
 		for (int i = array.length - 1; i >= 0; i--){
 			buffers.add(array[i]);
 		}
-		Iterator it = recentBuffers.iterator();
+		
+		Iterator it = editPaneMap.get(jEdit.getActiveView().getEditPane()).iterator();
 		while(it.hasNext()){
 			Buffer buffer = (Buffer)(it.next());
 			if (buffers.contains(buffer)){
@@ -106,9 +113,13 @@ public class SwitchBufferPlugin extends EBPlugin
 	{
 		if (message instanceof BufferChanging){
 			Buffer buffer = ((BufferChanging)message).getBuffer();
+			EditPane ep = ((BufferChanging)message).getEditPane();
 			// System.out.println("Buffer Changing " + buffer);
-			recentBuffers.remove(buffer);
-			recentBuffers.add(buffer);
+			LinkedHashSet hashset = editPaneMap.get(ep);
+			if (hashset != null){
+				hashset.remove(buffer);
+				hashset.add(buffer);
+			}
 		}
 		boolean rememberPreviousFromAnywhere = jEdit.getBooleanProperty("switchbuffer.options.remember-previous-buffer-from-anywhere");
 		
@@ -120,6 +131,14 @@ public class SwitchBufferPlugin extends EBPlugin
 				jEdit.setTemporaryProperty("switchbuffer.last-open-file", currentFile);
 				Buffer buf = epu.getEditPane().getBuffer();
 				currentFile = buf.getName();
+			}
+			
+			if (epu.getWhat() == EditPaneUpdate.CREATED){
+				if (!editPaneMap.containsKey(epu.getEditPane())){
+					editPaneMap.put(epu.getEditPane(), new LinkedHashSet());
+				}
+			} else if (epu.getWhat() == EditPaneUpdate.DESTROYED){
+				editPaneMap.remove(epu.getEditPane());
 			}
 		}
 		
@@ -133,12 +152,16 @@ public class SwitchBufferPlugin extends EBPlugin
 			}
 			if(bu.getWhat() == BufferUpdate.CLOSED)
 			{
-				Buffer buf = bu.getView().getBuffer();
+				Buffer buf = bu.getBuffer();
+				Iterator<LinkedHashSet> it = editPaneMap.values().iterator();
+				while(it.hasNext()){
+					it.next().remove(buf);
+				}
+				
 				if(buf.getName().equals(currentFile))
 				{
 					currentFile = "";
 				}
-				recentBuffers.remove(bu.getBuffer());
 			}
 			if(bu.getWhat() == BufferUpdate.PROPERTIES_CHANGED)
 			{
@@ -187,7 +210,8 @@ public class SwitchBufferPlugin extends EBPlugin
 		
 		GUIUtilities.loadGeometry(((java.awt.Window)(obj)), "switchbuffer.dialog");
 		((JDialog)(obj)).setVisible(true);
-	}//}}}
+	}
+	//}}}
 	
 	//{{{ +fileSuffixSwitch(Buffer, View) : void
 	public static void fileSuffixSwitch(Buffer buffer, View view)

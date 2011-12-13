@@ -75,6 +75,8 @@
 			srcdir="${src.dir}" destdir="${classes.dir}" deprecation="on" includeJavaRuntime="yes"
 			target="${compiler.target}"
       source="${compiler.source}"
+      debug="${compiler.debug}"
+      debuglevel="${compiler.debuglevel}"
 			>
 			<classpath refid="project.class.path"/>
 		</javac>

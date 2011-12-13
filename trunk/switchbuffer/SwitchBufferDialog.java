@@ -25,6 +25,7 @@ package switchbuffer;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -41,6 +42,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -71,6 +73,7 @@ public class SwitchBufferDialog extends JDialog
 	//{{{ instance fields
 	private JList bufferList;
 	private JTextField bufferName;
+	private JCheckBox recentCheck;
 	private JButton okButton;
 	private JButton closeButton;
 	private Action switchAndHideAction;
@@ -78,6 +81,7 @@ public class SwitchBufferDialog extends JDialog
 	private Action nextBufferAction;
 	private Action prevBufferAction;
 	private Action closeBufferAction;
+	private Action orderSelectAction;
 	private View parentView;
 	private String separator = File.separator;
 	private String commonRoot = null;//}}}
@@ -127,7 +131,13 @@ public class SwitchBufferDialog extends JDialog
 				public void mouseExited(MouseEvent me) { }
 				public void mouseReleased(MouseEvent me) { }
 			});
-		Dimension buttonSize = new Dimension(70, 25);
+		recentCheck = new JCheckBox("Order by Recent File");
+		recentCheck.setMnemonic(KeyEvent.VK_O);
+		if (jEdit.getBooleanProperty("switchbuffer.options.recent-order", false)){
+				recentCheck.setSelected(true);
+		}
+		
+		Dimension buttonSize = new Dimension(100, 25);
 		okButton = new JButton("OK");
 		okButton.setPreferredSize(buttonSize);
 		closeButton = new JButton("Cancel");
@@ -140,6 +150,7 @@ public class SwitchBufferDialog extends JDialog
 		JPanel buttonsPanel = new JPanel();
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
 		buttonsPanel.add(Box.createHorizontalGlue());
+		buttonsPanel.add(recentCheck);
 		buttonsPanel.add(okButton);
 		buttonsPanel.add(closeButton);
 		getContentPane().add(buttonsPanel, "South");
@@ -420,7 +431,15 @@ public class SwitchBufferDialog extends JDialog
 				bufferList.ensureIndexIsVisible(selectedIndex);
 			}
 		};
+		orderSelectAction = new AbstractAction("select-order"){
+			public void actionPerformed(ActionEvent actionevent)
+			{
+				jEdit.setBooleanProperty("switchbuffer.options.recent-order",recentCheck.isSelected());
+				refreshBufferList(bufferName.getText());
+			}
+		};
 		
+		recentCheck.addActionListener(orderSelectAction);
 		okButton.addActionListener(switchAndHideAction);
 		closeButton.addActionListener(hideAction);
 		bufferName.addActionListener(switchAndHideAction);
