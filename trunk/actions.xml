@@ -26,6 +26,15 @@
 	<ACTION NAME="switchbuffer.display-dialog">
 		<CODE>switchbuffer.SwitchBufferPlugin.switchBuffer(view);</CODE>
 	</ACTION>
+	
+	<ACTION NAME="switchbuffer.display-dialog-order-by-normal">
+		<CODE>switchbuffer.SwitchBufferPlugin.switchBuffer(view,false);</CODE>
+	</ACTION>
+	
+	<ACTION NAME="switchbuffer.display-dialog-order-by-recent">
+		<CODE>switchbuffer.SwitchBufferPlugin.switchBuffer(view,true);</CODE>
+	</ACTION>
+	
 	<ACTION NAME="switchbuffer.file-suffix-switch">
 		<CODE>switchbuffer.SwitchBufferPlugin.fileSuffixSwitch(buffer, view);</CODE>
 	</ACTION>

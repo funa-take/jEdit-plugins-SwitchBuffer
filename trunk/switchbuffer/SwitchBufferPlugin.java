@@ -183,6 +183,11 @@ public class SwitchBufferPlugin extends EBPlugin
 	}//}}}
 	
 	//{{{ +switchBuffer(View) : void
+	public static void switchBuffer(View view, boolean orderByRecent){
+		jEdit.setBooleanProperty("switchbuffer.options.recent-order",orderByRecent);
+		switchBuffer(view);
+	}
+	
 	/**
 	* Loads and diaplays the SwitchBuffer dialog while saving the parent view for
 	* future use.

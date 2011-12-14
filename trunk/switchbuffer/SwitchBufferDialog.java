@@ -133,9 +133,6 @@ public class SwitchBufferDialog extends JDialog
 			});
 		recentCheck = new JCheckBox("Order by Recent File");
 		recentCheck.setMnemonic(KeyEvent.VK_O);
-		if (jEdit.getBooleanProperty("switchbuffer.options.recent-order", false)){
-				recentCheck.setSelected(true);
-		}
 		
 		Dimension buttonSize = new Dimension(100, 25);
 		okButton = new JButton("OK");
@@ -436,6 +433,12 @@ public class SwitchBufferDialog extends JDialog
 			{
 				jEdit.setBooleanProperty("switchbuffer.options.recent-order",recentCheck.isSelected());
 				refreshBufferList(bufferName.getText());
+				SwingUtilities.invokeLater(new Runnable(){
+						public void run(){
+							bufferName.requestFocus();
+						}
+				});
+				
 			}
 		};
 		
@@ -608,6 +611,12 @@ public class SwitchBufferDialog extends JDialog
 			index = size - 1;
 		}
 		return index;
+	}
+	
+	@Override
+	public void setVisible(boolean visible){
+		recentCheck.setSelected(jEdit.getBooleanProperty("switchbuffer.options.recent-order", false));
+		super.setVisible(visible);
 	}
 }
 
