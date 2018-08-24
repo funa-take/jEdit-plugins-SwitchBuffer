@@ -60,14 +60,15 @@ import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.*;
+import org.gjt.sp.jedit.gui.KeyEventTranslator;
 //}}}
 
 /**
-* Dialog for the SwitchBuffer plugin
-*
-* @author    <a href="mailto:lee@leeturner.org">Lee Turner</a>
-* @version   $Revision: 1.15 $ $Date: 2003/04/09 08:08:11 $
-*/
+ * Dialog for the SwitchBuffer plugin
+ *
+ * @author    <a href="mailto:lee@leeturner.org">Lee Turner</a>
+ * @version   $Revision: 1.15 $ $Date: 2003/04/09 08:08:11 $
+ */
 public class SwitchBufferDialog extends JDialog
 {
 	//{{{ instance fields
@@ -88,10 +89,10 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ +SwitchBufferDialog(View) : <init>
 	/**
-	* Constructor for the SwitchBufferDialog object
-	*
-	* @param view  The parent jEdit view
-	*/
+	 * Constructor for the SwitchBufferDialog object
+	 *
+	 * @param view  The parent jEdit view
+	 */
 	public SwitchBufferDialog(View view)
 	{
 		super(view, jEdit.getProperty("options.switchbuffer.label"));
@@ -102,8 +103,8 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ -createLayout() : void
 	/**
-	* Creates all components on the dialog and lays them out.
-	*/
+	 * Creates all components on the dialog and lays them out.
+	 */
 	private void createLayout()
 	{
 		bufferName = new JTextField(jEdit.getProperty("switchbuffer.inputfield-text"));
@@ -157,11 +158,11 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ -getRenderer() : ListCellRenderer
 	/**
-	* Gets the ListCellRenderer for the file list based on the setting in the
-	* options pane.
-	*
-	* @return   The ListCellRenderer to be used in the file list
-	*/
+	 * Gets the ListCellRenderer for the file list based on the setting in the
+	 * options pane.
+	 *
+	 * @return   The ListCellRenderer to be used in the file list
+	 */
 	private ListCellRenderer getRenderer()
 	{
 		return
@@ -262,9 +263,9 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ -handleEvents() : void
 	/**
-	* Adds all the window and keyboard events that need to be trapped or listened
-	* for what the dialog is visible.
-	*/
+	 * Adds all the window and keyboard events that need to be trapped or listened
+	 * for what the dialog is visible.
+	 */
 	private void handleEvents()
 	{
 		addWindowListener(
@@ -450,11 +451,29 @@ public class SwitchBufferDialog extends JDialog
 		KeyStroke escKeystroke = KeyStroke.getKeyStroke("ESCAPE");
 		KeyStroke upKeystroke = KeyStroke.getKeyStroke("UP");
 		KeyStroke downKeystroke = KeyStroke.getKeyStroke("DOWN");
-		KeyStroke altiKeystroke = KeyStroke.getKeyStroke("alt I");
-		KeyStroke altkKeystroke = KeyStroke.getKeyStroke("alt K");
-		KeyStroke althKeystroke = KeyStroke.getKeyStroke("alt H");
-		KeyStroke ctrlwKeystroke = KeyStroke.getKeyStroke("control W");
-		KeyStroke alt0Keystroke = KeyStroke.getKeyStroke("alt 0");
+		// funa edit
+		// KeyStroke altiKeystroke = KeyStroke.getKeyStroke("alt I");
+		KeyStroke altiKeystroke = KeyStroke.getKeyStroke(
+			KeyEvent.VK_I,
+			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.ALT_MASK));
+		// KeyStroke altkKeystroke = KeyStroke.getKeyStroke("alt K");
+		KeyStroke altkKeystroke = KeyStroke.getKeyStroke(
+			KeyEvent.VK_K,
+			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.ALT_MASK));
+		// KeyStroke althKeystroke = KeyStroke.getKeyStroke("alt H");
+		KeyStroke althKeystroke = KeyStroke.getKeyStroke(
+			KeyEvent.VK_H,
+			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.ALT_MASK));
+		// KeyStroke ctrlwKeystroke = KeyStroke.getKeyStroke("control W");
+		KeyStroke ctrlwKeystroke = KeyStroke.getKeyStroke(
+			KeyEvent.VK_W,
+			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.CTRL_MASK));
+		
+		// KeyStroke alt0Keystroke = KeyStroke.getKeyStroke("alt 0");
+		KeyStroke alt0Keystroke = KeyStroke.getKeyStroke(
+			KeyEvent.VK_0,
+			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.ALT_MASK));
+		
 		
 		InputMap inputmap = bufferName.getInputMap(JTextField.WHEN_IN_FOCUSED_WINDOW);
 		inputmap.put(escKeystroke, hideAction.getValue("Name"));
@@ -475,12 +494,12 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ +refreshBufferList(String) : void
 	/**
-	* Updates the file list based on the string typed in the file name textbox.
-	* This takes into account whether the user has specified to ignore case or
-	* not.
-	*
-	* @param textToMatch  Description of the Parameter
-	*/
+	 * Updates the file list based on the string typed in the file name textbox.
+	 * This takes into account whether the user has specified to ignore case or
+	 * not.
+	 *
+	 * @param textToMatch  Description of the Parameter
+	 */
 	public void refreshBufferList(String textToMatch)
 	{
 		int oldIndex = bufferList.getSelectedIndex();
@@ -551,9 +570,9 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ +switchAndHide() : void
 	/**
-	* Method to switch to the selected buffer in the list and hide
-	* the SwitchBuffer dialog.
-	*/
+	 * Method to switch to the selected buffer in the list and hide
+	 * the SwitchBuffer dialog.
+	 */
 	public void switchAndHide()
 	{
 		Buffer selectedBuffer = (Buffer)bufferList.getSelectedValue();
@@ -577,9 +596,9 @@ public class SwitchBufferDialog extends JDialog
 	
 	//{{{ +closeBuffer() : void
 	/**
-	* Method to close the selected jEdit buffer and refresh the
-	* SwitchBuffer file list.
-	*/
+	 * Method to close the selected jEdit buffer and refresh the
+	 * SwitchBuffer file list.
+	 */
 	public void closeBuffer()
 	{
 		Buffer selectedBuffer = (Buffer)bufferList.getSelectedValue();
