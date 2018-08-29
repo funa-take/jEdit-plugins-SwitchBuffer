@@ -474,22 +474,23 @@ public class SwitchBufferDialog extends JDialog
 			KeyEvent.VK_0,
 			KeyEventTranslator.getModifierBeforeTranslate(KeyEvent.ALT_MASK));
 		
-		
-		InputMap inputmap = bufferName.getInputMap(JTextField.WHEN_IN_FOCUSED_WINDOW);
-		inputmap.put(escKeystroke, hideAction.getValue("Name"));
-		inputmap.put(althKeystroke, hideAction.getValue("Name"));
-		inputmap.put(upKeystroke, prevBufferAction.getValue("Name"));
-		inputmap.put(altiKeystroke, prevBufferAction.getValue("Name"));
-		inputmap.put(downKeystroke, nextBufferAction.getValue("Name"));
-		inputmap.put(altkKeystroke, nextBufferAction.getValue("Name"));
-		inputmap.put(ctrlwKeystroke, closeBufferAction.getValue("Name"));
-		inputmap.put(alt0Keystroke, closeBufferAction.getValue("Name"));
+		// Funa Edit
+		// InputMap inputmap = bufferName.getInputMap(JTextField.WHEN_IN_FOCUSED_WINDOW);
+		InputMap inputmap = bufferName.getInputMap(JTextField.WHEN_FOCUSED);
+		inputmap.put(escKeystroke, hideAction.getValue(Action.NAME));
+		inputmap.put(althKeystroke, hideAction.getValue(Action.NAME));
+		inputmap.put(upKeystroke, prevBufferAction.getValue(Action.NAME));
+		inputmap.put(altiKeystroke, prevBufferAction.getValue(Action.NAME));
+		inputmap.put(downKeystroke, nextBufferAction.getValue(Action.NAME));
+		inputmap.put(altkKeystroke, nextBufferAction.getValue(Action.NAME));
+		inputmap.put(ctrlwKeystroke, closeBufferAction.getValue(Action.NAME));
+		inputmap.put(alt0Keystroke, closeBufferAction.getValue(Action.NAME));
 		
 		ActionMap actionmap = bufferName.getActionMap();
-		actionmap.put(hideAction.getValue("Name"), hideAction);
-		actionmap.put(prevBufferAction.getValue("Name"), prevBufferAction);
-		actionmap.put(nextBufferAction.getValue("Name"), nextBufferAction);
-		actionmap.put(closeBufferAction.getValue("Name"), closeBufferAction);
+		actionmap.put(hideAction.getValue(Action.NAME), hideAction);
+		actionmap.put(prevBufferAction.getValue(Action.NAME), prevBufferAction);
+		actionmap.put(nextBufferAction.getValue(Action.NAME), nextBufferAction);
+		actionmap.put(closeBufferAction.getValue(Action.NAME), closeBufferAction);
 	}//}}}
 	
 	//{{{ +refreshBufferList(String) : void

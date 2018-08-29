@@ -1,3 +1,6 @@
+○2018/08/29
+  bufferName.getInputMapの引数をWHEN_FOCUSED
+  
 ○2018/08/25
   修飾キーの変換方法を変更
   
