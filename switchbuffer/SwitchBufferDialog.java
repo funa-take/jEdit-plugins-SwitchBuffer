@@ -25,7 +25,9 @@ package switchbuffer;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -75,6 +77,8 @@ public class SwitchBufferDialog extends JDialog
 	private JList bufferList;
 	private JTextField bufferName;
 	private JCheckBox recentCheck;
+	private JCheckBox filePathMatching;
+	private JCheckBox keywordMatching;
 	private JButton okButton;
 	private JButton closeButton;
 	private Action switchAndHideAction;
@@ -108,6 +112,22 @@ public class SwitchBufferDialog extends JDialog
 	private void createLayout()
 	{
 		bufferName = new JTextField(jEdit.getProperty("switchbuffer.inputfield-text"));
+		bufferName.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent evt) {
+					if (ClassLoader.getSystemResource("org/gjt/sp/jedit/gui/UserKey.class")!=null){
+						org.gjt.sp.jedit.gui.UserKey.consume(evt, 
+							org.gjt.sp.jedit.gui.UserKey.ALLOW_CTRL | org.gjt.sp.jedit.gui.UserKey.ALLOW_SHIFT,
+							org.gjt.sp.jedit.gui.UserKey.ALLOW_CTRL | org.gjt.sp.jedit.gui.UserKey.ALLOW_SHIFT,
+							org.gjt.sp.jedit.gui.UserKey.ALLOW_CTRL | org.gjt.sp.jedit.gui.UserKey.ALLOW_SHIFT,
+							org.gjt.sp.jedit.gui.UserKey.ALLOW_CTRL | org.gjt.sp.jedit.gui.UserKey.ALLOW_SHIFT,
+							true, true, true, true, true);
+						if (evt.isConsumed()){
+							return;
+						}
+					}
+				}
+		});
 		bufferList = new JList();
 		bufferList.setSelectionMode(0);
 		bufferList.setCellRenderer(getRenderer());
@@ -133,7 +153,11 @@ public class SwitchBufferDialog extends JDialog
 				public void mouseReleased(MouseEvent me) { }
 			});
 		recentCheck = new JCheckBox("Order by Recent File");
-		recentCheck.setMnemonic(KeyEvent.VK_O);
+		recentCheck.setMnemonic(KeyEvent.VK_N);
+		filePathMatching = new JCheckBox("Math on File Path");
+		filePathMatching.setMnemonic(KeyEvent.VK_P);
+		keywordMatching = new JCheckBox("Math with Keywords");
+		keywordMatching.setMnemonic(KeyEvent.VK_Y);
 		
 		Dimension buttonSize = new Dimension(100, 25);
 		okButton = new JButton("OK");
@@ -148,6 +172,8 @@ public class SwitchBufferDialog extends JDialog
 		JPanel buttonsPanel = new JPanel();
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
 		buttonsPanel.add(Box.createHorizontalGlue());
+		buttonsPanel.add(filePathMatching);
+		buttonsPanel.add(keywordMatching);
 		buttonsPanel.add(recentCheck);
 		buttonsPanel.add(okButton);
 		buttonsPanel.add(closeButton);
@@ -442,7 +468,30 @@ public class SwitchBufferDialog extends JDialog
 				
 			}
 		};
-		
+		filePathMatching.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionevent)
+				{
+					jEdit.setBooleanProperty("switchbuffer.options.filePathMatching", filePathMatching.isSelected());
+					refreshBufferList(bufferName.getText());
+					SwingUtilities.invokeLater(new Runnable(){
+							public void run(){
+								bufferName.requestFocus();
+							}
+					});
+				}
+		});
+		keywordMatching.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionevent)
+				{
+					jEdit.setBooleanProperty("switchbuffer.options.keywordMatching", keywordMatching.isSelected());
+					refreshBufferList(bufferName.getText());
+					SwingUtilities.invokeLater(new Runnable(){
+							public void run(){
+								bufferName.requestFocus();
+							}
+					});
+				}
+		});
 		recentCheck.addActionListener(orderSelectAction);
 		okButton.addActionListener(switchAndHideAction);
 		closeButton.addActionListener(hideAction);
@@ -529,8 +578,34 @@ public class SwitchBufferDialog extends JDialog
 		for(int i = 0; i < buffers.length; i++)
 		{
 			boolean match = false;
-		String bufferName = flag ? buffers[i].getName().toLowerCase() : buffers[i].getName();
-			if(matching.equals("ANYWHERE") && bufferName.indexOf(textToMatch) != -1)
+			
+			// funa edit
+			String bufferName = null;
+			boolean filePathMatching = jEdit.getBooleanProperty("switchbuffer.options.filePathMatching", false);
+			boolean keywordMatching = jEdit.getBooleanProperty("switchbuffer.options.keywordMatching", false);
+			
+			if (matching.equals("ANYWHERE") && filePathMatching) {
+				bufferName = buffers[i].getPath();
+			} else {
+				bufferName = buffers[i].getName();
+			}
+			if (flag) {
+				bufferName = bufferName.toLowerCase();
+			}
+			
+			if (matching.equals("ANYWHERE") && keywordMatching) {
+				String[] keywords = textToMatch.trim().split("\\s+");
+				boolean allFind = true;
+				for(int keyIndex = 0; keyIndex < keywords.length; keyIndex++) {
+					if (bufferName.indexOf(keywords[keyIndex]) == -1) {
+						allFind = false;
+						break;
+					}
+				}
+				if (allFind) {
+					match = true;
+				}
+			} else if(matching.equals("ANYWHERE") && bufferName.indexOf(textToMatch) != -1)
 			{
 				match = true;
 			}
@@ -636,6 +711,11 @@ public class SwitchBufferDialog extends JDialog
 	@Override
 	public void setVisible(boolean visible){
 		recentCheck.setSelected(jEdit.getBooleanProperty("switchbuffer.options.recent-order", false));
+		filePathMatching.setSelected(jEdit.getBooleanProperty("switchbuffer.options.filePathMatching", false));
+		keywordMatching.setSelected(jEdit.getBooleanProperty("switchbuffer.options.keywordMatching", false));
+		boolean selectedAnywhere = "ANYWHERE".equals(jEdit.getProperty("switchbuffer.options.filenameMatching"));
+		filePathMatching.setEnabled(selectedAnywhere);
+		keywordMatching.setEnabled(selectedAnywhere);
 		super.setVisible(visible);
 	}
 }
