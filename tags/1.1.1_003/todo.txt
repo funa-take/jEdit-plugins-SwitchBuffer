@@ -1,4 +1,0 @@
-TODO
-
-- File name completion using TAB key (like emacs iswitchb).
-- Sort out issue with the last remembered file being global across all views.
