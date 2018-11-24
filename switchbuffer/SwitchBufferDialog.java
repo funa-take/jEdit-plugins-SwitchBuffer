@@ -99,7 +99,7 @@ public class SwitchBufferDialog extends JDialog
 	 */
 	public SwitchBufferDialog(View view)
 	{
-		super(view, jEdit.getProperty("options.switchbuffer.label"));
+		super(view, jEdit.getProperty("options.switchbuffer.label"), true);
 		parentView = view;
 		createLayout();
 		handleEvents();
