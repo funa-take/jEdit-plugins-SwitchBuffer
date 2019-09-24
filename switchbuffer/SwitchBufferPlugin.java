@@ -54,6 +54,7 @@ public class SwitchBufferPlugin extends EBPlugin
 {
 	//{{{ static fields
 	private static Map dialogsMap = new HashMap();
+	private static SwitchBufferDialogForDirectory dialogForDirectory= null; 
 	//}}}
 	
 	// private static LinkedHashSet recentBuffers = new LinkedHashSet();
@@ -215,6 +216,23 @@ public class SwitchBufferPlugin extends EBPlugin
 		
 		GUIUtilities.loadGeometry(((java.awt.Window)(obj)), "switchbuffer.dialog");
 		((JDialog)(obj)).setVisible(true);
+	}
+	
+	public static void switchBufferForDirectory(View view)
+	{
+		if(view == null)
+		{
+			return;
+		}
+		
+		if (dialogForDirectory == null) {
+			dialogForDirectory = new SwitchBufferDialogForDirectory(view);
+		}
+		jEdit.setTemporaryProperty("switchbuffer.file-suffix-switch.filename", "");
+		
+		GUIUtilities.loadGeometry(dialogForDirectory, "switchbuffer.dialog");
+		dialogForDirectory.setView(view);
+		dialogForDirectory.setVisible(true);
 	}
 	//}}}
 	

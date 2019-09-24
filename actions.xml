@@ -35,6 +35,10 @@
 		<CODE>switchbuffer.SwitchBufferPlugin.switchBuffer(view,true);</CODE>
 	</ACTION>
 	
+	<ACTION NAME="switchbuffer.display-dialog-for-directory">
+		<CODE>switchbuffer.SwitchBufferPlugin.switchBufferForDirectory(view);</CODE>
+	</ACTION>
+	
 	<ACTION NAME="switchbuffer.file-suffix-switch">
 		<CODE>switchbuffer.SwitchBufferPlugin.fileSuffixSwitch(buffer, view);</CODE>
 	</ACTION>

@@ -74,8 +74,8 @@ import org.gjt.sp.jedit.gui.KeyEventTranslator;
 public class SwitchBufferDialog extends JDialog
 {
 	//{{{ instance fields
-	private JList bufferList;
-	private JTextField bufferName;
+	protected JList bufferList;
+	protected JTextField bufferName;
 	private JCheckBox recentCheck;
 	private JCheckBox filePathMatching;
 	private JCheckBox keywordMatching;
@@ -87,9 +87,9 @@ public class SwitchBufferDialog extends JDialog
 	private Action prevBufferAction;
 	private Action closeBufferAction;
 	private Action orderSelectAction;
-	private View parentView;
-	private String separator = File.separator;
-	private String commonRoot = null;//}}}
+	protected View parentView;
+	protected String separator = File.separator;
+	protected String commonRoot = null;//}}}
 	
 	//{{{ +SwitchBufferDialog(View) : <init>
 	/**
@@ -154,9 +154,9 @@ public class SwitchBufferDialog extends JDialog
 			});
 		recentCheck = new JCheckBox("Order by Recent File");
 		recentCheck.setMnemonic(KeyEvent.VK_N);
-		filePathMatching = new JCheckBox("Math on File Path");
+		filePathMatching = new JCheckBox("Match on File Path");
 		filePathMatching.setMnemonic(KeyEvent.VK_P);
-		keywordMatching = new JCheckBox("Math with Keywords");
+		keywordMatching = new JCheckBox("Match with Keywords");
 		keywordMatching.setMnemonic(KeyEvent.VK_Y);
 		
 		Dimension buttonSize = new Dimension(100, 25);
@@ -189,7 +189,7 @@ public class SwitchBufferDialog extends JDialog
 	 *
 	 * @return   The ListCellRenderer to be used in the file list
 	 */
-	private ListCellRenderer getRenderer()
+	protected ListCellRenderer getRenderer()
 	{
 		return
 		new DefaultListCellRenderer()
@@ -690,7 +690,7 @@ public class SwitchBufferDialog extends JDialog
 		});
 	} //}}}
 	
-	private int getIndex(int oldIndex){
+	protected int getIndex(int oldIndex){
 		int size = bufferList.getModel().getSize();
 		int index = oldIndex;
 		
