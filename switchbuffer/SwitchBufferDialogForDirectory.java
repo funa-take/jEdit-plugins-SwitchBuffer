@@ -86,11 +86,6 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     super(view);
   }
   
-  
-  public void setView(View view) {
-    this.parentView = view;
-  }
-  
   protected ListCellRenderer getRenderer()
   {
     return
@@ -102,48 +97,23 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
         String name = MiscUtilities.getFileName(path);
         String directory = MiscUtilities.getParentOfPath(path);
         String toString = name + " (" + MiscUtilities.abbreviateView(directory) + ')';
+        String commonRoot = searcher.getSearchDirectory();
         
         if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-directories"))
         {
           if(jEdit.getBooleanProperty("switchbuffer.options.show-intelligent-buffer-directories"))
           {
-            if(commonRoot == null)
+            if(commonRoot == null || !directory.startsWith(commonRoot))
             {
               setTitle(jEdit.getProperty("options.switchbuffer.label"));
               setText(toString);
             }
             else
             {
-              String parent = commonRoot.substring(0, commonRoot.length() - 1);// remove trailing '/' or '\'
-              int parentIndex = parent.lastIndexOf(separator);
-              if(parentIndex != -1)
-              {
-                parent = parent.substring(parentIndex);
-              }
-              else if(parent.length() == 0)
-              {//root on *nix i think....
-                
-                parent = separator;
-              }
+              String dirCommonAfter = directory.substring(commonRoot.length() - 1);
+              setText(name + " (" + dirCommonAfter + ")");
               
-              if(directory.equals(commonRoot))
-              {
-                setText(name + " (" + parent + ")");
-              }
-              else
-              {
-                setText(name + " (" + parent + separator + directory.substring(commonRoot.length()) + ")");
-              }
-              
-              if(parentIndex != -1)
-              {
-                setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + commonRoot.substring(0, parentIndex));
-              }
-              else
-              {
-                setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + parent);
-              }
-              
+              setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + commonRoot.substring(0, commonRoot.length() - 1));
             }
           }
           else
@@ -194,12 +164,11 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     if(textToMatch == null || textToMatch.trim().length() == 0)
     {
       if (searcher.getFilesSize() < MAX_SHOW) {
-        commonRoot = searcher.getSearchDirectory();
         bufferList.setListData(searcher.getFiles());
       }
       if(bufferList.getModel().getSize() > 0){
-          bufferList.setSelectedIndex(getIndex(oldIndex));
-        }
+        bufferList.setSelectedIndex(getIndex(oldIndex));
+      }
       // return;
     }
     
@@ -261,41 +230,38 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       
       if(match == true)
       {
-        if(jEdit.getBooleanProperty("switchbuffer.options.remove-active-buffer"))
-        {
-          if(!(parentView.getBuffer().getPath().equals(buffers[i])))
-          {
-            vector.add(buffers[i]);
-          }
-        }
-        else
-        {
-          vector.add(buffers[i]);
-        }
+        vector.add(buffers[i]);
       }
     }
     
     while(vector.size() >= MAX_SHOW) {
       vector.remove(MAX_SHOW - 1);
     }
-    commonRoot = searcher.getSearchDirectory();
     bufferList.setListData(vector);
     if(bufferList.getModel().getSize() > 0){
       bufferList.setSelectedIndex(getIndex(oldIndex));
     }
   }
   
+  public void startSearch(String searchDirectory) {
+    stopSearch();
+    
+    searcher = new DirectorySearcher(parentView, searchDirectory);
+    (new Thread(searcher)).start();
+    refreshRunnable = new RefreshRunnable(this, searcher);
+    (new Thread(refreshRunnable)).start();
+  }
+  
+  public void stopSearch() {
+    if (searcher != null) searcher.stop();
+    if (refreshRunnable != null) refreshRunnable.stop();
+  }
+  
   public void setVisible(boolean visible) {
-    if (visible) {
-      searcher = new DirectorySearcher(parentView);
-      (new Thread(searcher)).start();
-      refreshRunnable = new RefreshRunnable(this, searcher);
-      (new Thread(refreshRunnable)).start();
-      
-    } else {
-      searcher.stop();
-      refreshRunnable.stop();
+    if (!visible) {
+      stopSearch();
     }
+    
     super.setVisible(visible);
   }
   
@@ -327,29 +293,13 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     private View view;
     private String searchDirectory = null;
     
-    public DirectorySearcher(View view) {
+    public DirectorySearcher(View view, String searchDirectory) {
       this.view = view;
+      // ディレクトリ名の後ろにセパレータをつける
+      this.searchDirectory = MiscUtilities.getParentOfPath(MiscUtilities.constructPath(searchDirectory, "x"));
     }
     
     public void run() {
-      VFSBrowser browser = (VFSBrowser)view.getDockableWindowManager().getDockable("vfs.browser");
-      if (browser == null) return;
-      
-      String dir = null;
-      VFSFile[] selectedFiles = browser.getSelectedFiles();
-      if (selectedFiles.length > 0) {
-        if (selectedFiles[0].getType() == VFSFile.DIRECTORY) {
-          dir = selectedFiles[0].getPath();
-        } else if (selectedFiles[0].getType() == VFSFile.FILE) {
-          dir = MiscUtilities.getParentOfPath(selectedFiles[0].getPath());
-        }
-      }
-      
-      if (dir == null) {
-        dir = browser.getDirectory();
-      }
-      // ディレクトリ名の後ろにセパレータをつける
-      this.searchDirectory = MiscUtilities.getParentOfPath(MiscUtilities.constructPath(dir, "x"));
       files.clear();
       
       VFS vfs = VFSManager.getVFSForPath(searchDirectory);
@@ -400,6 +350,9 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       }
       
       VFSFile[] list = vfs._listFiles(session, dir, null);
+      if (list == null) {
+        return;
+      }
       
       for(VFSFile file: list) {
         if (this.stop) {
