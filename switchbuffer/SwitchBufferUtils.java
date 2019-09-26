@@ -57,66 +57,99 @@ public class SwitchBufferUtils
 	 */
 	public static String findCommonRoot(Vector buffers)
 	{
-		String separator = File.separator;
-		String commonRoot = null;
-		StringBuffer tmpPath = null;
-
-		for(int i = 0; i < buffers.size(); i++)
-		{
-			if(i == 0)
-			{//first buffer in vector...
-
-				commonRoot = ((Buffer)buffers.get(i)).getDirectory();
+		String commonRoot = "";
+		
+		for(int i = 0; i < buffers.size(); i++) {
+			String dir = ((Buffer)buffers.get(i)).getDirectory();
+			if (i == 0) {
+				commonRoot = dir;
+				continue;
 			}
-			else
-			{
-				if(!(commonRoot == null))
-				{// if null and not first then no match and we don't need to continue
-
-					String currentPath = ((Buffer)buffers.get(i)).getDirectory();
-
-					int commonBaseIndex = 0;
-					int commonSeparatorIndex = 0;
-					int thisBaseIndex = 0;
-					int thisSeparatorIndex = 0;
-					boolean match = true;
-					tmpPath = new StringBuffer();
-					do
-					{
-						commonSeparatorIndex = commonRoot.indexOf(separator, commonBaseIndex);
-						thisSeparatorIndex = currentPath.indexOf(separator, thisBaseIndex);
-						if((commonSeparatorIndex != -1) && (thisSeparatorIndex != -1))
-						{
-							if(commonRoot.substring(commonBaseIndex, commonSeparatorIndex).equals(currentPath.substring(thisBaseIndex, thisSeparatorIndex)))
-							{
-								tmpPath.append(currentPath.substring(thisBaseIndex, thisSeparatorIndex) + separator);
-								commonBaseIndex = commonSeparatorIndex + 1;
-								thisBaseIndex = thisSeparatorIndex + 1;
-							}
-							else
-							{
-								match = false;
-							}
-						}
-						else
-						{
-							match = false;
-						}
-					}while (match == true);
-				}
-
-				if(tmpPath.length() == 0)
-				{
-					commonRoot = null;
-				}
-				else
-				{
-					commonRoot = tmpPath.toString();
-				}
+			
+			while(commonRoot.length() > 0 && !dir.startsWith(commonRoot)) {
+				commonRoot = getParent(commonRoot);
+			}
+			
+			if (commonRoot.length() == 0) {
+				return "";
 			}
 		}
+		
 		return commonRoot;
 	}
+	
+	
+	public static String getParent(String path) {
+		String parent = MiscUtilities.getParentOfPath(path);
+		if (path.equals(parent)) {
+			return "";
+		}
+		
+		return parent;
+	}
+	
+	// public static String findCommonRoot(Vector buffers)
+	// {
+		// String separator = File.separator;
+		// String commonRoot = null;
+		// StringBuffer tmpPath = null;
+// 
+		// for(int i = 0; i < buffers.size(); i++)
+		// {
+			// if(i == 0)
+			// {//first buffer in vector...
+// 
+				// commonRoot = ((Buffer)buffers.get(i)).getDirectory();
+			// }
+			// else
+			// {
+				// if(!(commonRoot == null))
+				// {// if null and not first then no match and we don't need to continue
+// 
+					// String currentPath = ((Buffer)buffers.get(i)).getDirectory();
+// 
+					// int commonBaseIndex = 0;
+					// int commonSeparatorIndex = 0;
+					// int thisBaseIndex = 0;
+					// int thisSeparatorIndex = 0;
+					// boolean match = true;
+					// tmpPath = new StringBuffer();
+					// do
+					// {
+						// commonSeparatorIndex = commonRoot.indexOf(separator, commonBaseIndex);
+						// thisSeparatorIndex = currentPath.indexOf(separator, thisBaseIndex);
+						// if((commonSeparatorIndex != -1) && (thisSeparatorIndex != -1))
+						// {
+							// if(commonRoot.substring(commonBaseIndex, commonSeparatorIndex).equals(currentPath.substring(thisBaseIndex, thisSeparatorIndex)))
+							// {
+								// tmpPath.append(currentPath.substring(thisBaseIndex, thisSeparatorIndex) + separator);
+								// commonBaseIndex = commonSeparatorIndex + 1;
+								// thisBaseIndex = thisSeparatorIndex + 1;
+							// }
+							// else
+							// {
+								// match = false;
+							// }
+						// }
+						// else
+						// {
+							// match = false;
+						// }
+					// }while (match == true);
+				// }
+// 
+				// if(tmpPath.length() == 0)
+				// {
+					// commonRoot = null;
+				// }
+				// else
+				// {
+					// commonRoot = tmpPath.toString();
+				// }
+			// }
+		// }
+		// return commonRoot;
+	// }
 	//}}}
 
 	//{{{ +subSequenceMatch(String, String) : boolean

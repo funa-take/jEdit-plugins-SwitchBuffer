@@ -34,6 +34,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Vector;
+import java.util.Arrays;
+import java.util.Comparator;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -98,12 +100,13 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
         String directory = MiscUtilities.getParentOfPath(path);
         String toString = name + " (" + MiscUtilities.abbreviateView(directory) + ')';
         String commonRoot = searcher.getSearchDirectory();
+        // String commonRoot = MiscUtilities.getParentOfPath(searcher.getSearchDirectory());
         
         if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-directories"))
         {
           if(jEdit.getBooleanProperty("switchbuffer.options.show-intelligent-buffer-directories"))
           {
-            if(commonRoot == null || !directory.startsWith(commonRoot))
+            if(commonRoot == null || commonRoot.length() == 0 || !directory.startsWith(commonRoot))
             {
               setTitle(jEdit.getProperty("options.switchbuffer.label"));
               setText(toString);
@@ -161,19 +164,23 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
   public void refreshBufferList(String textToMatch)
   {
     int oldIndex = bufferList.getSelectedIndex();
-    if(textToMatch == null || textToMatch.trim().length() == 0)
-    {
-      if (searcher.getFilesSize() < MAX_SHOW) {
-        bufferList.setListData(searcher.getFiles());
-      }
-      if(bufferList.getModel().getSize() > 0){
-        bufferList.setSelectedIndex(getIndex(oldIndex));
-      }
-      // return;
-    }
+    // if(textToMatch == null || textToMatch.trim().length() == 0)
+    // {
+    //   // if (searcher.getFilesSize() < MAX_SHOW) {
+    //     String[] files = searcher.getFiles();
+    //     if (files.length > MAX_SHOW) {
+    //       files = Arrays.<String>copyOf(files, MAX_SHOW);
+    //     }
+    //     bufferList.setListData(files);
+    //   // }
+    //   if(bufferList.getModel().getSize() > 0){
+    //     bufferList.setSelectedIndex(getIndex(oldIndex));
+    //   }
+    //   // return;
+    // }
     
     String[] buffers = searcher.getFiles();
-    Vector vector = new Vector(buffers.length);
+    Vector<String> vector = new Vector<String>(buffers.length);
     boolean flag = jEdit.getBooleanProperty("switchbuffer.options.ignore-case");
     String matching = null;
     if(jEdit.getProperty("switchbuffer.file-suffix-switch.filename") != "")
@@ -234,10 +241,12 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       }
     }
     
-    while(vector.size() >= MAX_SHOW) {
-      vector.remove(MAX_SHOW - 1);
+    String[] files = new String[Math.min(MAX_SHOW, vector.size())];
+    for(int i = 0; i < files.length; i++) {
+      files[i] = vector.get(i);
     }
-    bufferList.setListData(vector);
+    
+    bufferList.setListData(files);
     if(bufferList.getModel().getSize() > 0){
       bufferList.setSelectedIndex(getIndex(oldIndex));
     }
@@ -287,11 +296,26 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     }
   }
   
+  //{{{ +closeBuffer() : void
+	/**
+	 * Method to close the selected jEdit buffer and refresh the
+	 * SwitchBuffer file list.
+	 */
+	public void closeBuffer()
+	{
+		// do nothing
+	} //}}}
+  
   static class DirectorySearcher implements Runnable {
     private boolean stop = false;
     private Vector<String> files = new Vector<String>();
     private View view;
     private String searchDirectory = null;
+    private Comparator<VFSFile> compPath = new Comparator<VFSFile>() {
+      public int compare(VFSFile a, VFSFile b) {
+        return a.getPath().compareTo(b.getPath());
+      }
+    };
     
     public DirectorySearcher(View view, String searchDirectory) {
       this.view = view;
@@ -330,7 +354,6 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
           stringFiles[i] = files.get(i);
         }
       }
-      
       return stringFiles;
     }
     
@@ -350,6 +373,7 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       }
       
       VFSFile[] list = vfs._listFiles(session, dir, null);
+      Arrays.sort(list, compPath);
       if (list == null) {
         return;
       }
@@ -359,7 +383,7 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
           return;
         }
         
-        if (file.isHidden() || !file.isReadable()) {
+        if (file.isHidden() || !file.isReadable() || MiscUtilities.isBackup(file.getPath())) {
           continue;
         }
         
@@ -386,10 +410,16 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     }
     
     public void run() {
+      Runnable refreshRunnable = new Runnable() {
+        public void run() {
+          dialog.refreshBufferList(dialog.bufferName.getText());
+        }
+      };
+      
       while(!stop) {
         int filesSize = searcher.getFilesSize();
         if (prevFilesSize != filesSize) {
-          dialog.refreshBufferList(dialog.bufferName.getText());
+          SwingUtilities.invokeLater(refreshRunnable);
           prevFilesSize = filesSize;
         }
         
