@@ -161,9 +161,18 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     };
   }
   
-  public void refreshBufferList(String textToMatch)
+  public void refreshBufferList(final String textToMatch)
   {
-    int oldIndex = bufferList.getSelectedIndex();
+    (new Thread() {
+        public void run() {
+          _refreshBufferList(textToMatch);
+        }
+    }).start();
+  }
+  
+  public void _refreshBufferList(String textToMatch)
+  {
+    final int oldIndex = bufferList.getSelectedIndex();
     // if(textToMatch == null || textToMatch.trim().length() == 0)
     // {
     //   // if (searcher.getFilesSize() < MAX_SHOW) {
@@ -241,15 +250,20 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       }
     }
     
-    String[] files = new String[Math.min(MAX_SHOW, vector.size())];
+    final String[] files = new String[Math.min(MAX_SHOW, vector.size())];
     for(int i = 0; i < files.length; i++) {
       files[i] = vector.get(i);
     }
     
-    bufferList.setListData(files);
-    if(bufferList.getModel().getSize() > 0){
-      bufferList.setSelectedIndex(getIndex(oldIndex));
-    }
+    SwingUtilities.invokeLater(new Runnable(){
+        public void run() {
+          bufferList.setListData(files);
+          if(bufferList.getModel().getSize() > 0){
+            bufferList.setSelectedIndex(getIndex(oldIndex));
+          }
+        }
+    });
+    
   }
   
   public void startSearch(String searchDirectory) {
@@ -373,10 +387,10 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
       }
       
       VFSFile[] list = vfs._listFiles(session, dir, null);
-      Arrays.sort(list, compPath);
       if (list == null) {
         return;
       }
+      Arrays.sort(list, compPath);
       
       for(VFSFile file: list) {
         if (this.stop) {
@@ -410,16 +424,10 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     }
     
     public void run() {
-      Runnable refreshRunnable = new Runnable() {
-        public void run() {
-          dialog.refreshBufferList(dialog.bufferName.getText());
-        }
-      };
-      
       while(!stop) {
         int filesSize = searcher.getFilesSize();
         if (prevFilesSize != filesSize) {
-          SwingUtilities.invokeLater(refreshRunnable);
+          dialog._refreshBufferList(dialog.bufferName.getText());
           prevFilesSize = filesSize;
         }
         
