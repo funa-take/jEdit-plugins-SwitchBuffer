@@ -1,11 +1,14 @@
+○2019/09/24
+  ・ディレクトリ検索機能を追加
+  
 ○2018/11/25
   ・ファイル選択のダイアログをモーダルに変更。
   表示しているバッファを閉じると、表示するバッファが変更され、フォーカスがEditPaneに移動してしまうため。
   
 ○2018/10/23
   ・ファイル選択のダイアログに以下のオプションを追加。ANYWHEREの場合に有効。
-    ・Math on File Path ファイルのパスでマッチングする
-    ・Math with Keywords スペース区切りの文字でマッチングする。順不同。
+    ・Match on File Path ファイルのパスでマッチングする
+    ・Match with Keywords スペース区切りの文字でマッチングする。順不同。
     例えば /project/model/test.php を model test で検索できるようになる。
   ・Order by Recent File のニーモニック変更
   ・TextFieldの入力でUserKeyを有効にした。

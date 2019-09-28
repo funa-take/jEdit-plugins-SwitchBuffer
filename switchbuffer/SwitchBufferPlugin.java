@@ -41,19 +41,23 @@ import org.gjt.sp.jedit.msg.EditPaneUpdate;
 import org.gjt.sp.jedit.msg.ViewUpdate;
 import org.gjt.sp.jedit.msg.BufferChanging;
 import org.gjt.sp.util.Log;
+import org.gjt.sp.jedit.browser.VFSBrowser;
+import org.gjt.sp.jedit.io.VFSFile;
+import org.gjt.sp.jedit.MiscUtilities;
 //}}}
 
 /**
-* A plugin for <a href="http://www.jedit.org/">jEdit</a> providing a quick and
-* easy way to change buffers.
-*
-* @author    <a href="mailto:lee@leeturner.org">Lee Turner</a>
-* @version   $Revision: 1.10 $ $Date: 2003/10/28 09:39:38 $
-*/
+ * A plugin for <a href="http://www.jedit.org/">jEdit</a> providing a quick and
+ * easy way to change buffers.
+ *
+ * @author    <a href="mailto:lee@leeturner.org">Lee Turner</a>
+ * @version   $Revision: 1.10 $ $Date: 2003/10/28 09:39:38 $
+ */
 public class SwitchBufferPlugin extends EBPlugin
 {
 	//{{{ static fields
 	private static Map dialogsMap = new HashMap();
+	private static Map<View, SwitchBufferDialogForDirectory> dialogsMapForDialog = new HashMap<View, SwitchBufferDialogForDirectory>();
 	//}}}
 	
 	// private static LinkedHashSet recentBuffers = new LinkedHashSet();
@@ -65,8 +69,8 @@ public class SwitchBufferPlugin extends EBPlugin
 	
 	//{{{ +SwitchBufferPlugin() : <init>
 	/**
-	* Default Constructor for the <tt>SwitchBufferPlugin</tt> object
-	*/
+	 * Default Constructor for the <tt>SwitchBufferPlugin</tt> object
+	 */
 	public SwitchBufferPlugin() { }//}}}
 	
 	static Buffer[] getBuffersByRecentOrder(){
@@ -104,11 +108,11 @@ public class SwitchBufferPlugin extends EBPlugin
 	
 	//{{{ +handleMessage(EBMessage) : void
 	/**
-	* Handles the messages on the jEdit message bus that SwitchBuffer
-	* is interested in
-	*
-	* @param message  The message from the message bus.
-	*/
+	 * Handles the messages on the jEdit message bus that SwitchBuffer
+	 * is interested in
+	 *
+	 * @param message  The message from the message bus.
+	 */
 	public void handleMessage(EBMessage message)
 	{
 		if (message instanceof BufferChanging){
@@ -177,6 +181,14 @@ public class SwitchBufferPlugin extends EBPlugin
 			{
 				Buffer buf = vu.getView().getBuffer();
 				currentFile = buf.getName();
+			} else if (vu.getWhat() == ViewUpdate.CLOSED) {
+				View view = vu.getView();
+				if (dialogsMap.containsKey(view)) {
+					dialogsMap.remove(view);
+				}
+				if (dialogsMapForDialog.containsKey(view)) {
+					dialogsMapForDialog.remove(view);
+				}
 			}
 		}
 		
@@ -189,11 +201,11 @@ public class SwitchBufferPlugin extends EBPlugin
 	}
 	
 	/**
-	* Loads and diaplays the SwitchBuffer dialog while saving the parent view for
-	* future use.
-	*
-	* @param view  The parent jEdit view
-	*/
+	 * Loads and diaplays the SwitchBuffer dialog while saving the parent view for
+	 * future use.
+	 *
+	 * @param view  The parent jEdit view
+	 */
 	public static void switchBuffer(View view)
 	{
 		if(view == null)
@@ -215,6 +227,76 @@ public class SwitchBufferPlugin extends EBPlugin
 		
 		GUIUtilities.loadGeometry(((java.awt.Window)(obj)), "switchbuffer.dialog");
 		((JDialog)(obj)).setVisible(true);
+	}
+	
+	public static void switchBufferForSelectedDirectoryInVFSBrowser(View view)
+	{
+		if(view == null)
+		{
+			return;
+		}
+		
+		VFSBrowser browser = (VFSBrowser)view.getDockableWindowManager().getDockable("vfs.browser");
+		
+		String searchDirectory = "";
+		if (browser == null) {
+			searchDirectory = view.getBuffer().getDirectory();
+		} else {
+			VFSFile[] selectedFiles = browser.getSelectedFiles();
+			if (selectedFiles.length > 0) {
+				if (selectedFiles[0].getType() == VFSFile.DIRECTORY) {
+					searchDirectory = selectedFiles[0].getPath();
+				} else if (selectedFiles[0].getType() == VFSFile.FILE) {
+					searchDirectory = MiscUtilities.getParentOfPath(selectedFiles[0].getPath());
+				}
+			}
+			if ("".equals(searchDirectory)) {
+				searchDirectory = browser.getDirectory();
+			}
+		}
+		
+		switchBufferForDirectory(view, searchDirectory);
+	}
+	
+	public static void switchBufferForDirectoryInVFSBrowser(View view)
+	{
+		if(view == null)
+		{
+			return;
+		}
+		
+		VFSBrowser browser = (VFSBrowser)view.getDockableWindowManager().getDockable("vfs.browser");
+		
+		String searchDirectory = "";
+		if (browser == null) {
+			searchDirectory = view.getBuffer().getDirectory();
+		} else {
+			searchDirectory = browser.getDirectory();
+		}
+		
+		switchBufferForDirectory(view, searchDirectory);
+	}
+	
+	public static void switchBufferForDirectory(View view, String searchDirectory)
+	{
+		if(view == null)
+		{
+			return;
+		}
+		
+		SwitchBufferDialogForDirectory dialog = null;
+		if (dialogsMapForDialog.containsKey(view)) {
+			dialog = dialogsMapForDialog.get(view);
+		} else {
+			dialog = new SwitchBufferDialogForDirectory(view);
+			dialogsMapForDialog.put(view, dialog);
+		}
+		
+		jEdit.setTemporaryProperty("switchbuffer.file-suffix-switch.filename", "");
+		
+		GUIUtilities.loadGeometry(dialog, "switchbuffer.dialog");
+		dialog.startSearch(searchDirectory);
+		dialog.setVisible(true);
 	}
 	//}}}
 	

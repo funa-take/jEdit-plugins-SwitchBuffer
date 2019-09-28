@@ -63,6 +63,7 @@ import org.gjt.sp.jedit.View;
 import org.gjt.sp.jedit.jEdit;
 import org.gjt.sp.util.*;
 import org.gjt.sp.jedit.gui.KeyEventTranslator;
+import org.gjt.sp.jedit.MiscUtilities;
 //}}}
 
 /**
@@ -74,8 +75,8 @@ import org.gjt.sp.jedit.gui.KeyEventTranslator;
 public class SwitchBufferDialog extends JDialog
 {
 	//{{{ instance fields
-	private JList bufferList;
-	private JTextField bufferName;
+	protected JList bufferList;
+	protected JTextField bufferName;
 	private JCheckBox recentCheck;
 	private JCheckBox filePathMatching;
 	private JCheckBox keywordMatching;
@@ -87,9 +88,9 @@ public class SwitchBufferDialog extends JDialog
 	private Action prevBufferAction;
 	private Action closeBufferAction;
 	private Action orderSelectAction;
-	private View parentView;
-	private String separator = File.separator;
-	private String commonRoot = null;//}}}
+	protected View parentView;
+	protected String separator = File.separator;
+	protected String commonRoot = "";//}}}
 	
 	//{{{ +SwitchBufferDialog(View) : <init>
 	/**
@@ -154,9 +155,9 @@ public class SwitchBufferDialog extends JDialog
 			});
 		recentCheck = new JCheckBox("Order by Recent File");
 		recentCheck.setMnemonic(KeyEvent.VK_N);
-		filePathMatching = new JCheckBox("Math on File Path");
+		filePathMatching = new JCheckBox("Match on File Path");
 		filePathMatching.setMnemonic(KeyEvent.VK_P);
-		keywordMatching = new JCheckBox("Math with Keywords");
+		keywordMatching = new JCheckBox("Match with Keywords");
 		keywordMatching.setMnemonic(KeyEvent.VK_Y);
 		
 		Dimension buttonSize = new Dimension(100, 25);
@@ -189,7 +190,7 @@ public class SwitchBufferDialog extends JDialog
 	 *
 	 * @return   The ListCellRenderer to be used in the file list
 	 */
-	private ListCellRenderer getRenderer()
+	protected ListCellRenderer getRenderer()
 	{
 		return
 		new DefaultListCellRenderer()
@@ -197,47 +198,24 @@ public class SwitchBufferDialog extends JDialog
 			public Component getListCellRendererComponent(JList jlist, Object obj, int index, boolean isSelected, boolean cellHasFocus)
 			{
 				Buffer buff = (Buffer)obj;
+				String name = buff.getName();
+				String directory = buff.getDirectory();
+				// String commonRoot = MiscUtilities.getParentOfPath(SwitchBufferDialog.this.commonRoot);
 				if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-directories"))
 				{
 					if(jEdit.getBooleanProperty("switchbuffer.options.show-intelligent-buffer-directories"))
 					{
-						if(commonRoot == null)
+						if(commonRoot == null || commonRoot.length() == 0 || !directory.startsWith(commonRoot))
 						{
 							setTitle(jEdit.getProperty("options.switchbuffer.label"));
 							setText(buff.toString());
 						}
 						else
 						{
-							String parent = commonRoot.substring(0, commonRoot.length() - 1);// remove trailing '/' or '\'
-							int parentIndex = parent.lastIndexOf(separator);
-							if(parentIndex != -1)
-							{
-								parent = parent.substring(parentIndex);
-							}
-							else if(parent.length() == 0)
-							{//root on *nix i think....
-								
-								parent = separator;
-							}
+							String dirCommonAfter = directory.substring(commonRoot.length() - 1);
+							setText(name + " (" + dirCommonAfter + ")");
 							
-							if(buff.getDirectory().equals(commonRoot))
-							{
-								setText(buff.getName() + " (" + parent + ")");
-							}
-							else
-							{
-								setText(buff.getName() + " (" + parent + separator + buff.getDirectory().substring(commonRoot.length()) + ")");
-							}
-							
-							if(parentIndex != -1)
-							{
-								setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + commonRoot.substring(0, parentIndex));
-							}
-							else
-							{
-								setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + parent);
-							}
-							
+							setTitle(jEdit.getProperty("options.switchbuffer.label") + " - " + commonRoot.substring(0, commonRoot.length() - 1));
 						}
 					}
 					else
@@ -247,7 +225,7 @@ public class SwitchBufferDialog extends JDialog
 				}
 				else
 				{
-					setText(buff.getName());
+					setText(name);
 				}
 				
 				if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-icons"))
@@ -260,7 +238,7 @@ public class SwitchBufferDialog extends JDialog
 					setBackground(jlist.getSelectionBackground());
 					if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-colours"))
 					{
-						setForeground(SwitchBufferUtils.getColour(buff.getName()));
+						setForeground(SwitchBufferUtils.getColour(name));
 					}
 					else
 					{
@@ -272,7 +250,7 @@ public class SwitchBufferDialog extends JDialog
 					setBackground(jlist.getBackground());
 					if(jEdit.getBooleanProperty("switchbuffer.options.show-buffer-colours"))
 					{
-						setForeground(SwitchBufferUtils.getColour(buff.getName()));
+						setForeground(SwitchBufferUtils.getColour(name));
 					}
 					else
 					{
@@ -299,7 +277,7 @@ public class SwitchBufferDialog extends JDialog
 			{
 				public void windowActivated(WindowEvent windowevent)
 				{
-					commonRoot = null;
+					commonRoot = "";
 					bufferList.setCellRenderer(getRenderer());
 					if(jEdit.getProperty("switchbuffer.file-suffix-switch.filename") != "")
 					{
@@ -371,7 +349,7 @@ public class SwitchBufferDialog extends JDialog
 				
 				public void refreshBufferList(DocumentEvent documentevent)
 				{
-					commonRoot = null;
+					commonRoot = "";
 					Document document = documentevent.getDocument();
 					String s = null;
 					try
@@ -554,13 +532,13 @@ public class SwitchBufferDialog extends JDialog
 	{
 		int oldIndex = bufferList.getSelectedIndex();
 		
-		if(textToMatch == null || textToMatch.trim().length() == 0)
-		{
-			bufferList.setListData(SwitchBufferPlugin.getBuffersByRecentOrder());
-			if(bufferList.getModel().getSize() > 0){
-				bufferList.setSelectedIndex(getIndex(oldIndex));
-			}
-		}
+		// if(textToMatch == null || textToMatch.trim().length() == 0)
+		// {
+		// 	bufferList.setListData(SwitchBufferPlugin.getBuffersByRecentOrder());
+		// 	if(bufferList.getModel().getSize() > 0){
+		// 		bufferList.setSelectedIndex(getIndex(oldIndex));
+		// 	}
+		// }
 		
 		Buffer buffers[] = SwitchBufferPlugin.getBuffersByRecentOrder();
 		Vector vector = new Vector(buffers.length);
@@ -634,7 +612,6 @@ public class SwitchBufferDialog extends JDialog
 			}
 		}
 		
-		commonRoot = null;
 		commonRoot = SwitchBufferUtils.findCommonRoot(vector);
 		
 		bufferList.setListData(vector);
@@ -690,7 +667,7 @@ public class SwitchBufferDialog extends JDialog
 		});
 	} //}}}
 	
-	private int getIndex(int oldIndex){
+	protected int getIndex(int oldIndex){
 		int size = bufferList.getModel().getSize();
 		int index = oldIndex;
 		

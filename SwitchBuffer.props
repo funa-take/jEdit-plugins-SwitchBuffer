@@ -32,6 +32,8 @@ plugin.switchbuffer.SwitchBufferPlugin.depend.1=jedit 04.02.04.00
 plugin.switchbuffer.SwitchBufferPlugin.menu=switchbuffer.display-dialog \
 	switchbuffer.display-dialog-order-by-normal \
 	switchbuffer.display-dialog-order-by-recent \
+	switchbuffer.display-dialog-for-selected-directory \
+	switchbuffer.display-dialog-for-directory \
 	- \
 	switchbuffer.file-suffix-switch
 
@@ -42,6 +44,8 @@ plugin.switchbuffer.SwitchBufferPlugin.option-pane=switchbuffer
 switchbuffer.display-dialog.label=Show Switch Buffer
 switchbuffer.display-dialog-order-by-normal.label=Show Switch Buffer Normal Order
 switchbuffer.display-dialog-order-by-recent.label=Show Switch Buffer Recent Order
+switchbuffer.display-dialog-for-selected-directory.label=Show Switch Buffer For Selected Directory in VFSBrowser
+switchbuffer.display-dialog-for-directory.label=Show Switch Buffer For Directory in VFSBrowser
 switchbuffer.file-suffix-switch.label=File Suffix Switch
 #}}}
 
