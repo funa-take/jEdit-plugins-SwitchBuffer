@@ -327,7 +327,7 @@ public class SwitchBufferDialogForDirectory extends SwitchBufferDialog
     private String searchDirectory = null;
     private Comparator<VFSFile> compPath = new Comparator<VFSFile>() {
       public int compare(VFSFile a, VFSFile b) {
-        return a.getPath().compareTo(b.getPath());
+        return a.getPath().compareToIgnoreCase(b.getPath());
       }
     };
     
